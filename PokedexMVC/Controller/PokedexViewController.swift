@@ -13,11 +13,14 @@ class PokedexViewController: UICollectionViewController {
   
   // MARK: - Properties
   
+  var pokemon = [Pokemon]()
+  
   // MARK: - Init
   
   override func viewDidLoad() {
     super.viewDidLoad()
     configureViewComponents()
+    fetchPokemon()
   }
   
   // MARK: - Selectors
@@ -25,7 +28,18 @@ class PokedexViewController: UICollectionViewController {
   @objc func showSearchBar() {
     print("botao funcionando")
   }
-
+  
+  // MARK: - API
+  
+  func fetchPokemon() {
+    Service.shared.fetchPokemon { (pokemon) in
+      //necessário implementar esse dispatch pois o reloadData() tem que ser na mainThread
+      DispatchQueue.main.async {
+        self.pokemon = pokemon
+        self.collectionView.reloadData()
+      }
+    }
+  }
   
   // MARK: - Helper Functions
   
@@ -41,6 +55,7 @@ class PokedexViewController: UICollectionViewController {
     appearance.titleTextAttributes = titleAttribute
     navigationController?.navigationBar.isTranslucent = false
     navigationController?.navigationBar.scrollEdgeAppearance = appearance
+    navigationController?.navigationBar.standardAppearance = appearance
     navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .search,
                                                         target: self,
                                                         action: #selector(showSearchBar))
@@ -52,11 +67,15 @@ class PokedexViewController: UICollectionViewController {
 
 extension PokedexViewController {
   override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-    return 6
+    return pokemon.count
   }
   
   override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
     let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as! PokedexCell
+    
+    //dentro do array pokemon, pegue o pokemon na posicao zero e coloque na primeira célula da collection
+    cell.pokemon = pokemon[indexPath.item]
+    
     return cell
   }
 }
